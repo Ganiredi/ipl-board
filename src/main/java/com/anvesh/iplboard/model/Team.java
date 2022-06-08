@@ -16,10 +16,10 @@ public class Team {
     @Id
     private long id;
     private String teamName;
-    private String totalMatches;
+    private long totalMatches;
     private String totalWins;
 
-    public Team(String teamName, String totalMatches) {
+    public Team(String teamName, long totalMatches) {
         this.teamName = teamName;
         this.totalMatches = totalMatches;
     }
