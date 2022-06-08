@@ -9,6 +9,7 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.util.HashMap;
@@ -23,11 +24,13 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
     private final EntityManager entityManagerl;
 
     @Autowired
+
     public JobCompletionNotificationListener(EntityManager entityManager) {
         this.entityManagerl = entityManager;
     }
 
     @Override
+    @Transactional
     public void afterJob(JobExecution jobExecution) {
         if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
             log.info("!!! JOB FINISHED! Time to verify the results");
@@ -45,7 +48,29 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
                     .stream()
                     .map(team -> new Team((String) team[0], (long) team[1]))
                     .forEach(team -> teamData.put(team.getTeamName(), team));
-            ;
+
+            entityManagerl.createQuery("select distinct m.team2, count(*) from Match m group by m.team2 ", Object[].class)
+                    .getResultList()
+                    .stream()
+                    .forEach(e -> {
+                        Team team = teamData.get((String) e[0]);
+                        if (team != null) {
+                            team.setTotalMatches(team.getTotalMatches() + (long) e[1]);
+                        }
+                    });
+
+            entityManagerl.createQuery("select m.matchWinner ,count (*) from Match  m group by m.matchWinner", Object[].class)
+                    .getResultList()
+                    .stream()
+                    .forEach(e -> {
+                        Team team = teamData.get((String) e[0]);
+                        if (team != null) {
+                            team.setTotalWins((long) e[1]);
+                        }
+                    });
+
+            teamData.values().forEach(entityManagerl::persist);
+            teamData.values().forEach(System.out::println);
 
         }
     }
