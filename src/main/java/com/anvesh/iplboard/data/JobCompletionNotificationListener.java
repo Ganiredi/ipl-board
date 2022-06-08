@@ -27,11 +27,11 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
         if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
             log.info("!!! JOB FINISHED! Time to verify the results");
 
-            jdbcTemplate.query("SELECT team1, team2 FROM match ",
+           /* jdbcTemplate.query("SELECT team1, team2 FROM match ",
                     (rs, row) -> "team 1 :" +
                             rs.getString(1) + "team 1 :" +
                             rs.getString(2)
-            ).forEach(System.out::println);
+            ).forEach(System.out::println);*/
         }
     }
 }
